@@ -1,0 +1,88 @@
+# Docker Compose Production Configuration
+# This file provides production-specific configurations
+# following 12-factor app principles
+
+version: '3.8'
+
+services:
+  ftgo-application:
+    # Production image configuration
+    image: ${FTGO_APP_IMAGE:-ftgo-monolith_ftgo-application:latest}
+    
+    # Production environment variables
+    environment:
+      # Production logging levels
+      LOGGING_LEVEL_FTGO: ${LOGGING_LEVEL_FTGO:-INFO}
+      LOGGING_LEVEL_HIBERNATE_SQL: ${LOGGING_LEVEL_HIBERNATE_SQL:-WARN}
+      LOGGING_LEVEL_ROOT: ${LOGGING_LEVEL_ROOT:-WARN}
+      
+      # Production database settings
+      SPRING_JPA_GENERATE_DDL: false
+      SPRING_JPA_SHOW_SQL: false
+      
+      # Production actuator settings
+      MANAGEMENT_ENDPOINTS: health,info,metrics
+      MANAGEMENT_HEALTH_SHOW_DETAILS: never
+      
+      # Production JVM settings
+      JAVA_OPTS: ${JAVA_OPTS:--Xmx512m -XX:+UseG1GC -XX:+UseStringDeduplication}
+    
+    # Production resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 768M
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    
+    # Production restart policy
+    restart: always
+    
+    # Production health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${SERVER_PORT:-8080}/actuator/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  mysql:
+    # Production database image
+    image: ${MYSQL_IMAGE:-mysql:8.0}
+    
+    # Production database configuration
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-ftgo}
+    
+    # Production database persistence
+    volumes:
+      - mysql_prod_data:/var/lib/mysql
+    
+    # Production resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    
+    # Production restart policy
+    restart: always
+    
+    # Production health check
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+      interval: 60s
+
+volumes:
+  mysql_prod_data:
+    driver: local

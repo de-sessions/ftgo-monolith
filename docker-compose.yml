@@ -1,27 +1,48 @@
-version: '3'
+version: '3.8'
 services:
   mysql:
     build: ./mysql
     ports:
-      - 3306:3306
+      - "${MYSQL_PORT:-3306}:3306"
     environment:
-      - MYSQL_ROOT_PASSWORD=rootpassword
-      - MYSQL_USER=mysqluser
-      - MYSQL_PASSWORD=mysqlpw
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_USER: ${MYSQL_USER:-mysqluser}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-mysqlpw}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-ftgo}
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    restart: unless-stopped
+    
   ftgo-application:
     build: ./ftgo-application
     ports:
-      - "8081:8080"
+      - "${FTGO_APP_PORT:-8081}:${SERVER_PORT:-8080}"
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql/ftgo
-      SPRING_DATASOURCE_USERNAME: mysqluser
-      SPRING_DATASOURCE_PASSWORD: mysqlpw
-      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.jdbc.Driver
-      EVENTUATELOCAL_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      EVENTUATELOCAL_ZOOKEEPER_CONNECTION_STRING: zookeeper:2181
-      JAVA_OPTS: -Xmx192m
-      SPRING_SLEUTH_ENABLED: "true"
-      SPRING_SLEUTH_SAMPLER_PROBABILITY: 1
-      SPRING_ZIPKIN_BASE_URL: http://zipkin:9411/
+      SPRING_APPLICATION_NAME: ${SPRING_APPLICATION_NAME:-ftgo-application}
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:mysql://mysql/ftgo?useSSL=false}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-mysqluser}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-mysqlpw}
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:-com.mysql.cj.jdbc.Driver}
+      EVENTUATELOCAL_KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
+      EVENTUATELOCAL_ZOOKEEPER_CONNECTION_STRING: ${ZOOKEEPER_CONNECTION_STRING:-zookeeper:2181}
+      JAVA_OPTS: ${JAVA_OPTS:--Xmx192m}
+      SERVER_PORT: ${SERVER_PORT:-8080}
+      SPRING_SLEUTH_ENABLED: ${SPRING_SLEUTH_ENABLED:-true}
+      SPRING_SLEUTH_SAMPLER_PROBABILITY: ${SPRING_SLEUTH_SAMPLER_PROBABILITY:-1}
+      SPRING_ZIPKIN_BASE_URL: ${SPRING_ZIPKIN_BASE_URL:-http://zipkin:9411/}
+      LOGGING_LEVEL_JPA: ${LOGGING_LEVEL_JPA:-INFO}
+      LOGGING_LEVEL_HIBERNATE_SQL: ${LOGGING_LEVEL_HIBERNATE_SQL:-INFO}
+      MANAGEMENT_ENDPOINTS: ${MANAGEMENT_ENDPOINTS:-health,info,metrics}
+      MANAGEMENT_HEALTH_SHOW_DETAILS: ${MANAGEMENT_HEALTH_SHOW_DETAILS:-when-authorized}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${SERVER_PORT:-8080}/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped

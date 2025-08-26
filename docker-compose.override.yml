@@ -1,0 +1,49 @@
+# Docker Compose Override for Development Environment
+# This file provides development-specific configurations
+# and demonstrates dev/prod parity principles
+
+version: '3.8'
+
+services:
+  ftgo-application:
+    environment:
+      # Development-specific logging
+      LOGGING_LEVEL_FTGO: DEBUG
+      LOGGING_LEVEL_HIBERNATE_SQL: DEBUG
+      LOGGING_LEVEL_WEB: DEBUG
+      
+      # Development database settings
+      SPRING_JPA_GENERATE_DDL: true
+      SPRING_JPA_SHOW_SQL: true
+      
+      # Development actuator settings
+      MANAGEMENT_ENDPOINTS: health,info,metrics,env,configprops
+      MANAGEMENT_HEALTH_SHOW_DETAILS: always
+      
+    volumes:
+      # Enable hot reload for development
+      - ./ftgo-application/build/libs:/app:ro
+    
+    # Development port mapping
+    ports:
+      - "${FTGO_APP_PORT:-8081}:${SERVER_PORT:-8080}"
+      - "${FTGO_DEBUG_PORT:-5005}:5005"
+    
+    # Enable remote debugging
+    environment:
+      JAVA_OPTS: "${JAVA_OPTS:--Xmx192m} -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+
+  mysql:
+    # Development database persistence
+    volumes:
+      - mysql_dev_data:/var/lib/mysql
+    
+    # Development database configuration
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-devpassword}
+      MYSQL_USER: ${MYSQL_USER:-devuser}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-devpassword}
+
+volumes:
+  mysql_dev_data:
+    driver: local

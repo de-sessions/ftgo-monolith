@@ -1,18 +1,26 @@
-#! /bin/bash -e
+#!/bin/bash
+set -euo pipefail
+
+echo "=== FTGO Build and Run ==="
+echo "12-Factor compliant build, release, and run pipeline"
+
+if [ -f ".env" ]; then
+    echo "Loading environment variables from .env file..."
+    export $(cat .env | grep -v '^#' | xargs)
+fi
 
 . ./set-env.sh
 
-./gradlew assemble
+echo "=== Build Stage ==="
+./scripts/build.sh
 
-docker-compose build
+echo "=== Release Stage ==="
+./scripts/release.sh
 
-. ./set-env.sh
+echo "=== Run Stage ==="
+./scripts/run.sh
 
-docker-compose down -v
-docker-compose up -d --build mysql
-
-./gradlew waitForMySql
-
-docker-compose up -d
-
+echo "=== Application URLs ==="
 ./show-swagger-ui-urls.sh
+
+echo "=== Build and Run Completed Successfully ==="

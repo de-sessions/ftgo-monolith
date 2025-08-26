@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ftgo-config
+  namespace: default
+data:
+  SPRING_APPLICATION_NAME: "ftgo-application"
+  SERVER_PORT: "8080"
+  SPRING_JPA_GENERATE_DDL: "false"
+  LOGGING_LEVEL_JPA: "INFO"
+  LOGGING_LEVEL_HIBERNATE_SQL: "INFO"
+  LOGGING_LEVEL_FTGO: "INFO"
+  LOGGING_LEVEL_ROOT: "INFO"
+  MANAGEMENT_ENDPOINTS: "health,info,metrics"
+  MANAGEMENT_HEALTH_SHOW_DETAILS: "when-authorized"
+  SPRING_SLEUTH_ENABLED: "true"
+  SPRING_SLEUTH_SAMPLER_PROBABILITY: "1"
+  JAVA_OPTS: "-Xmx512m -XX:+UseG1GC"

@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ftgo-application
+  namespace: default
+  labels:
+    app: ftgo-application
+    version: v1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ftgo-application
+  template:
+    metadata:
+      labels:
+        app: ftgo-application
+        version: v1
+    spec:
+      containers:
+      - name: ftgo-application
+        image: ftgo-monolith_ftgo-application:latest
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:mysql://mysql-service:3306/ftgo?useSSL=false"
+        envFrom:
+        - configMapRef:
+            name: ftgo-config
+        - secretRef:
+            name: ftgo-secrets
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ftgo-application-service
+  namespace: default
+spec:
+  selector:
+    app: ftgo-application
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+  type: ClusterIP

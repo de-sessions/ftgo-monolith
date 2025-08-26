@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="${LOGGING_LEVEL_ROOT:-INFO}">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+    <logger name="net.chrisrichardson.ftgo" level="${LOGGING_LEVEL_FTGO:-INFO}"/>
+    <logger name="org.springframework.orm.jpa" level="${LOGGING_LEVEL_JPA:-INFO}"/>
+    <logger name="org.hibernate.SQL" level="${LOGGING_LEVEL_HIBERNATE_SQL:-INFO}"/>
+    <logger name="org.springframework.web" level="${LOGGING_LEVEL_WEB:-INFO}"/>
+    <logger name="org.springframework.security" level="${LOGGING_LEVEL_SECURITY:-INFO}"/>
+    <logger name="com.zaxxer.hikari" level="${LOGGING_LEVEL_HIKARI:-INFO}"/>
+    <logger name="io.eventuate" level="${LOGGING_LEVEL_EVENTUATE:-INFO}"/>
+</configuration>
