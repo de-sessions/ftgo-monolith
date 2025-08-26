@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    
+    <!-- Console appender for 12-factor logging -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp/>
+                <logLevel/>
+                <loggerName/>
+                <mdc/>
+                <arguments/>
+                <message/>
+                <stackTrace/>
+            </providers>
+        </encoder>
+    </appender>
+
+    <!-- Fallback console appender if JSON encoder is not available -->
+    <appender name="CONSOLE_FALLBACK" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Root logger configuration -->
+    <root level="${LOGGING_LEVEL_ROOT:-INFO}">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+    <!-- Application-specific loggers -->
+    <logger name="net.chrisrichardson.ftgo" level="${LOGGING_LEVEL_FTGO:-INFO}"/>
+    <logger name="org.springframework.orm.jpa" level="${LOGGING_LEVEL_JPA:-INFO}"/>
+    <logger name="org.hibernate.SQL" level="${LOGGING_LEVEL_HIBERNATE_SQL:-INFO}"/>
+    <logger name="org.springframework.web" level="${LOGGING_LEVEL_WEB:-INFO}"/>
+    <logger name="org.springframework.security" level="${LOGGING_LEVEL_SECURITY:-INFO}"/>
+    
+    <!-- Database connection pool logging -->
+    <logger name="com.zaxxer.hikari" level="${LOGGING_LEVEL_HIKARI:-INFO}"/>
+    
+    <!-- Event sourcing logging -->
+    <logger name="io.eventuate" level="${LOGGING_LEVEL_EVENTUATE:-INFO}"/>
+</configuration>
